@@ -263,7 +263,7 @@
           </div>
           <span class="live-badge"><span class="pulse" aria-hidden="true"></span><span id="mint-phase-badge">CHECKING…</span></span>
         </div>
-        <div class="mint-notice warn" id="mint-nowallet" hidden>⚠ No wallet could be reached from this page. Wallet apps do not always inject into embedded pages — open this link from the address bar of your wallet's own DApp browser instead: Bitget Wallet, MetaMask, Trust Wallet, or Mises, with BNB Chain selected. You can still buy via the <a href="https://bscscan.com/address/0x3832ea583baf9c255e6e0d615cc8f9cf38ad98c0#writeContract" target="_blank" rel="noopener" style="color:inherit;font-weight:700">BscScan route</a> or the agent prompt below.</div>
+        <div class="mint-notice warn" id="mint-nowallet" hidden>⚠ No wallet could be reached from this page. Wallet apps do not always inject into embedded pages — open this link from the address bar of your wallet's own DApp browser instead: Binance Web3 Wallet, Bitget Wallet, MetaMask, Trust Wallet, or Mises, with BNB Chain selected. Or tap <b>Connect with WalletConnect</b> below — it connects Bitget, MetaMask, Binance Web3, Trust and 300+ other wallets straight from a normal browser. You can still buy via the <a href="https://bscscan.com/address/0x3832ea583baf9c255e6e0d615cc8f9cf38ad98c0#writeContract" target="_blank" rel="noopener" style="color:inherit;font-weight:700">BscScan route</a> or the agent prompt below.</div>
         <div class="mint-notice" id="mint-phase-note">Phase 1 is open: your wallet must hold a Binance Agent ID to buy right now. Phase 2 (from Nov 8, 08:18 WIB) is open to everyone — same price, same bonus.</div>
         <div class="mint-grid">
           <div>
@@ -286,6 +286,7 @@
         </div>
         <div class="mint-actions">
           <button class="mbtn primary" id="btn-connect" type="button">Connect Wallet</button>
+          <button class="mbtn" id="btn-connect-wc" type="button">Connect with WalletConnect</button>
           <button class="mbtn" id="btn-approve" type="button" disabled>1 · Approve USDT</button>
           <button class="mbtn primary" id="btn-mint" type="button" disabled>2 · Mint APLS</button>
         </div>
@@ -505,6 +506,7 @@ address, and do not pay any "unlock" or "claim" fee — there is none.</pre>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.21.0/dist/index.umd.js"></script>
     <script>
       (function () {
         // Countdowns — WIB is UTC+7. Phase 1 ends 2026-11-08 08:18 WIB,
@@ -692,7 +694,7 @@ address, and do not pay any "unlock" or "claim" fee — there is none.</pre>
         }
         waitForProvider(1500).then(function (p) {
           if (p) { attachProviderEvents(); }
-          else { showNoWallet(); setStatus("No wallet found yet. If you are inside a wallet app, wait a moment and tap Connect Wallet — otherwise open this page from the DApp browser of Bitget Wallet, MetaMask, Trust Wallet, or Mises."); }
+          else { showNoWallet(); setStatus("No wallet found yet. If you are inside a wallet app, wait a moment and tap Connect Wallet — otherwise open this page from the DApp browser of Binance Web3 Wallet, Bitget Wallet, MetaMask, Trust Wallet, or Mises, or tap Connect with WalletConnect below."); }
         });
 
         function walletContracts(){
@@ -751,13 +753,54 @@ address, and do not pay any "unlock" or "claim" fee — there is none.</pre>
             }).then(function(){
               connecting = false;
               btnConnect.disabled = false;
-              document.getElementById("wallet-addr").textContent = "Connected: " + account;
-              btnConnect.textContent = "Connected ✓"; document.getElementById("step-connect").className = "done";
-              refreshLive(); refreshAllowance();
+              markConnected();
             }).catch(function(e){
               if (e && e.message === "__timeout__") fail("The wallet did not answer within 20 seconds. Unlock your wallet, then tap Connect Wallet again. If it keeps failing, open this page from the wallet's own DApp browser address bar — or use the BscScan route below.");
               else fail("Connection failed: " + ((e && (e.shortMessage || e.message)) || e) + " — unlock your wallet and tap Connect Wallet to retry, or use the BscScan route below.");
             });
+          });
+        });
+        /* ---- Shared post-connect UI update ---- */
+        function markConnected() {
+          document.getElementById("wallet-addr").textContent = "Connected: " + account;
+          btnConnect.textContent = "Connected ✓"; document.getElementById("step-connect").className = "done";
+          refreshLive(); refreshAllowance();
+        }
+        /* ---- WalletConnect: connect any wallet from a normal browser ----
+           Works for Bitget, MetaMask, Binance Web3, Trust and 300+ wallets
+           without opening this page inside a wallet's DApp browser. */
+        var WC_PROJECT_ID = "e558dceb5778e9127835e854875538e1";
+        var btnConnectWc = document.getElementById("btn-connect-wc");
+        btnConnectWc.addEventListener("click", function(){
+          if (connecting) return;
+          if (typeof ethers === "undefined") { setStatus("The wallet library failed to load — check your connection and reload this page.", "err"); return; }
+          if (!window.EthereumProvider) { setStatus("WalletConnect failed to load — check your connection and reload this page, or use Connect Wallet inside your wallet's DApp browser.", "err"); return; }
+          connecting = true;
+          btnConnectWc.disabled = true;
+          btnConnectWc.textContent = "Opening WalletConnect…";
+          setStatus("Pick your wallet in the WalletConnect list and approve the connection inside your wallet app…");
+          window.EthereumProvider.init({
+            projectId: WC_PROJECT_ID,
+            chains: [56],
+            showQrModal: true,
+            metadata: { name: "AlphaPulse (APLS)", description: "AlphaPulse presale — mint APLS on BNB Chain", url: "https://alphapulseapls.github.io/alphapulse/", icons: ["https://alphapulseapls.github.io/alphapulse/apls-icon.png"] },
+            qrModalOptions: { themeMode: "dark" }
+          }).then(function(wcp){
+            provider = wcp;
+            return wcp.connect().then(function(){
+              account = (wcp.accounts && wcp.accounts[0]) || null;
+              if (!account) throw new Error("The wallet returned no account.");
+              attachProviderEvents();
+              connecting = false;
+              btnConnectWc.disabled = false;
+              btnConnectWc.textContent = "WalletConnect ✓";
+              markConnected();
+            });
+          }).catch(function(e){
+            connecting = false;
+            btnConnectWc.disabled = false;
+            btnConnectWc.textContent = "Connect with WalletConnect";
+            setStatus("WalletConnect failed: " + ((e && (e.shortMessage || e.message)) || e) + " — try again, or open this page inside your wallet's DApp browser and use Connect Wallet.", "err");
           });
         });
         btnApprove.addEventListener("click", function(){
