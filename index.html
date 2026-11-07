@@ -774,12 +774,13 @@ address, and do not pay any "unlock" or "claim" fee — there is none.</pre>
         btnConnectWc.addEventListener("click", function(){
           if (connecting) return;
           if (typeof ethers === "undefined") { setStatus("The wallet library failed to load — check your connection and reload this page.", "err"); return; }
-          if (!window.EthereumProvider) { setStatus("WalletConnect failed to load — check your connection and reload this page, or use Connect Wallet inside your wallet's DApp browser.", "err"); return; }
+          var EthereumProvider = window.EthereumProvider || (window["@walletconnect/ethereum-provider"] && window["@walletconnect/ethereum-provider"].EthereumProvider);
+          if (!EthereumProvider) { setStatus("WalletConnect failed to load — check your connection and reload this page, or use Connect Wallet inside your wallet's DApp browser.", "err"); return; }
           connecting = true;
           btnConnectWc.disabled = true;
           btnConnectWc.textContent = "Opening WalletConnect…";
           setStatus("Pick your wallet in the WalletConnect list and approve the connection inside your wallet app…");
-          window.EthereumProvider.init({
+          EthereumProvider.init({
             projectId: WC_PROJECT_ID,
             chains: [56],
             showQrModal: true,
