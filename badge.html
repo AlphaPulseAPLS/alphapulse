@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="apls-icon.png" />
+    <title>AlphaPulse Genesis Badge (APGB) — Free Mint on BNB Chain</title>
+    <style>
+      :root {
+        --bg: #0a0e14; --bg-soft: #0f141d; --panel: #111927; --panel-edge: #22304a;
+        --ink: #e8eef7; --ink-dim: #9db0c9; --ink-faint: #647b9c;
+        --accent: #f0b90b; --accent-ink: #1a1402; --live: #2ee6a8;
+        --live-dim: rgba(46,230,168,.14); --warn: #ffb454;
+        --shadow: 0 18px 50px rgba(0,0,0,.45); --radius: 14px;
+      }
+      @media (prefers-color-scheme: light) {
+        :root { --bg:#f4f6fa; --bg-soft:#eceff5; --panel:#fff; --panel-edge:#d7deea;
+          --ink:#131c2c; --ink-dim:#45577a; --ink-faint:#7286a6; --accent:#c99400; --accent-ink:#fff;
+          --live:#0a9d6c; --live-dim:rgba(10,157,108,.12); --shadow:0 18px 44px rgba(30,45,80,.14); }
+      }
+      * { box-sizing: border-box; }
+      body { margin:0; background:var(--bg); color:var(--ink);
+        font-family:"Avenir Next","Segoe UI",system-ui,-apple-system,sans-serif;
+        font-size:16.5px; line-height:1.6; -webkit-font-smoothing:antialiased; }
+      .mono { font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; }
+      .wrap { max-width:1060px; margin:0 auto; padding:0 20px 72px; }
+      .hero { text-align:center; padding:56px 0 8px; }
+      .hero h1 { font-size:2.3rem; margin:.2em 0 .1em; line-height:1.15; }
+      .hero .sub { color:var(--ink-dim); max-width:640px; margin:0 auto; }
+      .pill { display:inline-block; padding:3px 12px; border-radius:999px; font-size:.8rem;
+        font-weight:700; letter-spacing:.06em; background:var(--live-dim); color:var(--live); }
+      .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px; margin:26px 0; }
+      .stat { background:var(--panel); border:1px solid var(--panel-edge); border-radius:var(--radius); padding:16px 18px; }
+      .stat .k { color:var(--ink-faint); font-size:.8rem; text-transform:uppercase; letter-spacing:.07em; }
+      .stat .v { font-size:1.35rem; font-weight:700; margin-top:2px; }
+      .card { background:var(--panel); border:1px solid var(--panel-edge); border-radius:var(--radius);
+        padding:22px; margin:18px 0; box-shadow:var(--shadow); }
+      .card h2 { margin:.1em 0 .5em; font-size:1.25rem; }
+      .mbtn { display:inline-block; border:0; cursor:pointer; border-radius:10px; padding:13px 22px;
+        font-size:1rem; font-weight:700; background:var(--accent); color:var(--accent-ink); margin:4px 6px 4px 0; }
+      .mbtn.secondary { background:transparent; color:var(--ink); border:1px solid var(--panel-edge); }
+      .mbtn:disabled { opacity:.45; cursor:not-allowed; }
+      .mint-status { margin-top:12px; min-height:1.5em; color:var(--ink-dim); }
+      .mint-status.err { color:#ff7a7a; } .mint-status.ok { color:var(--live); }
+      .mint-notice { border:1px solid var(--warn); color:var(--warn); border-radius:10px; padding:12px 14px; margin:12px 0; font-size:.95rem; }
+      .check { list-style:none; padding:0; margin:10px 0; }
+      .check li { padding:4px 0; } .check .ok { color:var(--live); font-weight:700; } .check .no { color:#ff7a7a; font-weight:700; }
+      a { color:var(--accent); }
+      .small { font-size:.9rem; color:var(--ink-dim); }
+      .refbox { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+      .refbox input { flex:1 1 320px; padding:11px 12px; border-radius:10px; border:1px solid var(--panel-edge);
+        background:var(--bg-soft); color:var(--ink); font-size:.9rem; }
+      footer { color:var(--ink-faint); font-size:.85rem; text-align:center; margin-top:36px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="hero">
+        <span class="pill" id="mint-phase-badge">GENESIS BADGE · FREE MINT</span>
+        <h1>🎖️ AlphaPulse Genesis Badge</h1>
+        <p class="sub">A free, one-per-wallet NFT for the AlphaPulse community on BNB Chain.
+          Hold a Binance Agent ID and at least <b>10,000 APLS</b> to mint — every qualifying mint is a
+          <b>Gold Founder</b> badge. Badge holders then mine APLS daily.</p>
+      </div>
+
+      <div class="grid">
+        <div class="stat"><div class="k">Minted</div><div class="v" id="stat-minted">—</div></div>
+        <div class="stat"><div class="k">Supply cap</div><div class="v">10,000</div></div>
+        <div class="stat"><div class="k">Price</div><div class="v">FREE</div></div>
+        <div class="stat"><div class="k">Per wallet</div><div class="v">1 badge</div></div>
+      </div>
+
+      <div class="grid">
+        <div class="stat"><div class="k">APLS price · live</div><div class="v" id="stat-price">—</div></div>
+        <div class="stat"><div class="k">24h change</div><div class="v" id="stat-change">—</div></div>
+        <div class="stat"><div class="k">Liquidity</div><div class="v" id="stat-liq">—</div></div>
+        <div class="stat"><div class="k">Pool</div><div class="v">PancakeSwap</div></div>
+      </div>
+      <p class="small" style="text-align:center">Live APLS price from the PancakeSwap pool via DexScreener · refreshes every 60 seconds · <a href="https://dexscreener.com/bsc/0x299754e0219c105f1507e1979f25648bf48a7124" target="_blank" rel="noopener">View chart</a></p>
+
+      <div class="card">
+        <h2>Mint your badge</h2>
+        <div class="mint-notice" id="mint-nowallet" hidden>⚠ No wallet could be reached from this page.
+          Open this link from the address bar of your wallet's own DApp browser instead: Binance Web3 Wallet,
+          Bitget Wallet, MetaMask, Trust Wallet, or Mises, with BNB Chain selected — or tap
+          <b>Connect with WalletConnect</b> below.</div>
+        <ul class="check">
+          <li><span id="chk-agent">•</span> Wallet holds a Binance Agent ID</li>
+          <li><span id="chk-apls">•</span> Wallet holds at least 10,000 APLS</li>
+          <li><span id="chk-minted">•</span> This wallet has not minted yet</li>
+        </ul>
+        <div id="ref-note" class="small"></div>
+        <button class="mbtn" id="btn-connect" type="button">Connect Wallet</button>
+        <button class="mbtn secondary" id="btn-connect-wc" type="button">Connect with WalletConnect</button>
+        <button class="mbtn" id="btn-mint" type="button" disabled>Mint FREE Badge</button>
+        <div class="small" id="wallet-addr"></div>
+        <div class="small" id="wallet-bal"></div>
+        <div class="mint-status" id="mint-status">Connect your wallet to check eligibility.</div>
+        <div class="small" id="mint-tx"></div>
+      </div>
+
+      <div class="card">
+        <h2>Your referral link</h2>
+        <p class="small">Share your link — when a friend mints through it, the referral is recorded on-chain.
+          Connect your wallet and your personal link appears here.</p>
+        <div class="refbox">
+          <input id="ref-link" readonly value="" placeholder="Connect a wallet to get your referral link" />
+          <button class="mbtn secondary" id="btn-copy-ref" type="button">Copy</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>⛏️ Next: APLS Mining</h2>
+        <p>After the mint, Genesis Badge holders can register for APLS Mining: hold your badge and keep at
+          least 10,000 APLS in the same wallet, and your badge earns APLS every day. Registration carries a
+          one-time activation fee of 0.001 BNB — no staking, your badge and tokens stay in your wallet.
+          🚀 Boost menu: double your mining speed for 30 days — 200 APLS per badge, paid back into the mining pool.</p>
+        <p class="small">The mining registration link will be published here and on the official channels when it opens.</p>
+      </div>
+
+      <div class="card">
+        <h2>Trading the badge</h2>
+        <p>The Genesis Badge is a standard NFT with its own built-in marketplace (2.5% fee on sales — the fee funds APLS buybacks) and is also
+          tradable on Element Market. Contract addresses are published here at launch and verifiable on BscScan.</p>
+        <p class="small mono" id="addr-line"></p>
+      </div>
+
+      <footer>AlphaPulse (APLS) · BNB Chain · The badge contract is the source of truth — verify it on BscScan any time.</footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.21.0/dist/index.umd.js"></script>
+    <script>
+    (function(){
+      "use strict";
+      /* ================= CONFIG — fill at deploy time ================= */
+      var BADGE   = "0x8F977623D213Bc06ab63a8E032F803CE889BEf99";   // AlphaPulseGenesisBadge
+      var MARKET  = "0xf64f72b0C7B80b5499Dd56ec267D392aF306F566";   // APGBMarket
+      var REGISTRY= "0x60B9262456dE011F7d15a54CdD8c48bAaa8B022F"; // SPACE ID Agent ID
+      var APLS    = "<redacted>";
+      var MIN_APLS= 10000;
+      var REF_CODES = { "temycrypto": "<redacted>" };
+      var RPC = "https://bsc-dataseed.binance.org";
+      var WC_PROJECT_ID = "e558dceb5778e9127835e854875538e1";
+      /* ================================================================ */
+
+      var BADGE_ABI = ["function mint()","function mintWithReferrer(address)","function mintOpen() view returns (bool)",
+        "function hasMinted(address) view returns (bool)","function totalSupply() view returns (uint256)",
+        "function MAX_SUPPLY() view returns (uint256)","function balanceOf(address) view returns (uint256)"];
+      var ERC20_ABI = ["function balanceOf(address) view returns (uint256)"];
+
+      function $(id){ return document.getElementById(id); }
+      function fmtN(n){ return Number(n).toLocaleString("en-US"); }
+      var mStatus = $("mint-status"), btnConnect = $("btn-connect"), btnMint = $("btn-mint"), btnWc = $("btn-connect-wc");
+      function setStatus(t, cls){ mStatus.textContent = t; mStatus.className = "mint-status" + (cls ? " " + cls : ""); }
+      var deployed = /^0x[0-9a-fA-F]{40}$/.test(BADGE);
+
+      /* ---- referral capture: ?ref=<code>; named codes map to addresses,
+              a raw 0x code passes through; persisted across visits ---- */
+      function resolveRef(){
+        var q = new URLSearchParams(window.location.search).get("ref");
+        var code = q || localStorage.getItem("apgb_ref") || "";
+        if (q) localStorage.setItem("apgb_ref", q);
+        if (!code) return null;
+        if (REF_CODES[code.toLowerCase()]) return REF_CODES[code.toLowerCase()];
+        if (/^0x[0-9a-fA-F]{40}$/.test(code)) return code;
+        return null;
+      }
+      var referrer = resolveRef();
+      if (referrer) $("ref-note").textContent = "Referral linked ✓ — your mint will credit your referrer on-chain.";
+
+      function readProvider(){ return new ethers.JsonRpcProvider(RPC); }
+      function refreshLive(){
+        if (!deployed || typeof ethers === "undefined") return;
+        try {
+          var c = new ethers.Contract(BADGE, BADGE_ABI, readProvider());
+          Promise.all([c.totalSupply(), c.mintOpen()]).then(function(r){
+            $("stat-minted").textContent = fmtN(r[0]) + " / 10,000";
+            $("mint-phase-badge").textContent = r[1] ? "GENESIS BADGE · MINT OPEN" : "GENESIS BADGE · MINT OPENS SOON";
+          }).catch(function(){});
+        } catch(e){}
+      }
+      if (deployed) { refreshLive(); setInterval(refreshLive, 30000); }
+      else { $("mint-phase-badge").textContent = "GENESIS BADGE · LAUNCHING NOV 13"; setStatus("The badge contract is being deployed — the mint opens on Nov 13. Check the official channels for the announcement."); btnConnect.disabled = true; btnWc.disabled = true; }
+
+      /* ---- live APLS price from the PancakeSwap pool (DexScreener feed) ---- */
+      var PAIR = "0x299754e0219c105f1507e1979f25648bf48a7124";
+      function loadPrice(){
+        fetch("https://api.dexscreener.com/latest/dex/pairs/bsc/" + PAIR).then(function(r){ return r.json(); }).then(function(j){
+          var p = j && j.pair; if (!p || !p.priceUsd) return;
+          $("stat-price").textContent = "$" + Number(p.priceUsd).toFixed(8);
+          var ch = p.priceChange ? p.priceChange.h24 : null;
+          if (ch !== null && ch !== undefined) { var el = $("stat-change"); el.textContent = (ch > 0 ? "+" : "") + Number(ch).toFixed(2) + "%"; el.style.color = ch >= 0 ? "#2ecc71" : "#e74c3c"; }
+          if (p.liquidity && p.liquidity.usd !== undefined && p.liquidity.usd !== null) $("stat-liq").textContent = "$" + Number(p.liquidity.usd).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }).catch(function(){});
+      }
+      loadPrice(); setInterval(loadPrice, 60000);
+
+      $("addr-line").textContent = deployed ? ("Badge: " + BADGE + " · Market: " + MARKET) : "";
+
+      /* ---- provider detection (same proven pattern as the presale page) ---- */
+      var provider = null, account = null, announcedProviders = [];
+      window.addEventListener("eip6963:announceProvider", function(ev){ try { if (ev.detail && ev.detail.provider) announcedProviders.push(ev.detail.provider); } catch(e){} });
+      try { window.dispatchEvent(new Event("eip6963:requestProvider")); } catch(e){}
+      function findProvider(){
+        if (window.bitkeep && window.bitkeep.ethereum) { provider = window.bitkeep.ethereum; return provider; }
+        if (window.ethereum) { provider = window.ethereum; return provider; }
+        for (var i=0;i<announcedProviders.length;i++){ if (announcedProviders[i]) { provider = announcedProviders[i]; return provider; } }
+        if (window.trustwallet) { provider = window.trustwallet; return provider; }
+        if (window.BinanceChain) { provider = window.BinanceChain; return provider; }
+        provider = null; return null;
+      }
+      function waitForProvider(ms){ return new Promise(function(resolve){ var f = findProvider(); if (f) { resolve(f); return; } var w=0; var t=setInterval(function(){ w+=150; var p=findProvider(); if (p||w>=ms){ clearInterval(t); resolve(p); } },150); }); }
+      function preq(m, p){ return Promise.resolve(provider.request(p ? { method:m, params:p } : { method:m })); }
+      function withTimeout(pr, ms){ return Promise.race([pr, new Promise(function(_, rej){ setTimeout(function(){ rej(new Error("__timeout__")); }, ms); })]); }
+
+      function walletBadge(){ var bp = new ethers.BrowserProvider(provider); return bp.getSigner().then(function(s){ return new ethers.Contract(BADGE, BADGE_ABI, s); }); }
+
+      function refreshEligibility(){
+        if (!account || !deployed) return;
+        var rp = readProvider();
+        var reg = new ethers.Contract(REGISTRY, ERC20_ABI, rp);
+        var tok = new ethers.Contract(APLS, ERC20_ABI, rp);
+        var bad = new ethers.Contract(BADGE, BADGE_ABI, rp);
+        Promise.all([reg.balanceOf(account), tok.balanceOf(account), bad.hasMinted(account), bad.mintOpen()]).then(function(r){
+          var hasAgent = r[0] > 0n, apls = Number(ethers.formatUnits(r[1], 18)), already = r[2], open = r[3];
+          $("chk-agent").innerHTML  = hasAgent ? '<span class="ok">✓</span>' : '<span class="no">✗</span>';
+          $("chk-apls").innerHTML   = (apls >= MIN_APLS) ? '<span class="ok">✓</span>' : '<span class="no">✗</span>';
+          $("chk-minted").innerHTML = !already ? '<span class="ok">✓</span>' : '<span class="no">✗</span>';
+          $("wallet-bal").textContent = "APLS balance: " + fmtN(Math.floor(apls)) + " · Agent ID: " + (hasAgent ? "yes" : "no");
+          var link = window.location.origin + window.location.pathname + "?ref=" + account;
+          $("ref-link").value = link;
+          if (already) { btnMint.disabled = true; setStatus("This wallet already minted its Genesis Badge ✓", "ok"); }
+          else if (!open) { btnMint.disabled = true; setStatus("Minting is not open yet — it opens with the launch announcement."); }
+          else if (!hasAgent) { btnMint.disabled = true; setStatus("This wallet holds no Binance Agent ID, so it cannot mint the Genesis Badge.", "err"); }
+          else if (apls < MIN_APLS) { btnMint.disabled = true; setStatus("You need at least 10,000 APLS in this wallet to mint. Buy APLS in the pool, then tap Connect again.", "err"); }
+          else { btnMint.disabled = false; setStatus("Ready — tap Mint FREE Badge and confirm in your wallet."); }
+        }).catch(function(e){ setStatus("Could not read wallet state: " + (e.shortMessage || e.message || e), "err"); });
+      }
+      function markConnected(){
+        $("wallet-addr").textContent = "Connected: " + account;
+        btnConnect.textContent = "Connected ✓";
+        refreshLive(); refreshEligibility();
+      }
+      var connecting = false;
+      btnConnect.addEventListener("click", function(){
+        if (connecting) return;
+        if (typeof ethers === "undefined") { setStatus("The wallet library failed to load — check your connection and reload this page.", "err"); return; }
+        connecting = true; btnConnect.disabled = true; btnConnect.textContent = "Connecting…";
+        setStatus("Connecting — approve the connection in your wallet if it asks…");
+        function fail(msg){ connecting=false; btnConnect.disabled=false; btnConnect.textContent="Connect Wallet"; $("mint-nowallet").hidden = false; setStatus(msg, "err"); }
+        waitForProvider(1500).then(function(p){
+          if (!p) { fail("No wallet found in this browser. Open this page from the address bar of your wallet's own DApp browser (Bitget Wallet, MetaMask, Trust Wallet, or Mises) — or use WalletConnect below."); return; }
+          withTimeout(preq("eth_requestAccounts"), 20000).then(function(accs){
+            account = accs && accs[0];
+            if (!account) throw new Error("The wallet returned no account.");
+            return withTimeout(preq("eth_chainId"), 10000).then(function(cid){
+              if (cid !== "0x38") return withTimeout(preq("wallet_switchEthereumChain", [{ chainId: "0x38" }]), 20000).catch(function(swErr){
+                if (swErr && swErr.code === 4902) return preq("wallet_addEthereumChain", [{ chainId:"0x38", chainName:"BNB Smart Chain", nativeCurrency:{ name:"BNB", symbol:"BNB", decimals:18 }, rpcUrls:[RPC], blockExplorerUrls:["https://bscscan.com"] }]);
+                throw swErr;
+              });
+            });
+          }).then(function(){ connecting=false; btnConnect.disabled=false; markConnected(); })
+          .catch(function(e){ if (e && e.message === "__timeout__") fail("The wallet did not answer within 20 seconds. Unlock your wallet, then tap Connect Wallet again."); else fail("Connection failed: " + ((e && (e.shortMessage || e.message)) || e)); });
+        });
+      });
+      btnWc.addEventListener("click", function(){
+        if (connecting) return;
+        if (typeof ethers === "undefined") { setStatus("The wallet library failed to load — check your connection and reload this page.", "err"); return; }
+        var EthereumProvider = window.EthereumProvider || (window["@walletconnect/ethereum-provider"] && window["@walletconnect/ethereum-provider"].EthereumProvider);
+        if (!EthereumProvider) { setStatus("WalletConnect failed to load — check your connection and reload this page, or use Connect Wallet inside your wallet's DApp browser.", "err"); return; }
+        connecting = true; btnWc.disabled = true; btnWc.textContent = "Opening WalletConnect…";
+        setStatus("Pick your wallet in the WalletConnect list and approve the connection inside your wallet app…");
+        EthereumProvider.init({ projectId: WC_PROJECT_ID, chains: [56], showQrModal: true,
+          metadata: { name: "AlphaPulse Genesis Badge", description: "Free Genesis Badge mint for AlphaPulse holders on BNB Chain", url: "https://alphapulseapls.github.io/alphapulse/", icons: ["https://alphapulseapls.github.io/alphapulse/apls-icon.png"] },
+          qrModalOptions: { themeMode: "dark" }
+        }).then(function(wcp){
+          provider = wcp;
+          return wcp.connect().then(function(){
+            account = (wcp.accounts && wcp.accounts[0]) || null;
+            if (!account) throw new Error("The wallet returned no account.");
+            connecting = false; btnWc.disabled = false; btnWc.textContent = "WalletConnect ✓";
+            markConnected();
+          });
+        }).catch(function(e){ connecting=false; btnWc.disabled=false; btnWc.textContent="Connect with WalletConnect"; setStatus("WalletConnect failed: " + ((e && (e.shortMessage || e.message)) || e), "err"); });
+      });
+      btnMint.addEventListener("click", function(){
+        if (!account || !deployed) return;
+        setStatus("Minting — confirm in your wallet…");
+        walletBadge().then(function(c){
+          return referrer ? c.mintWithReferrer(referrer) : c.mint();
+        }).then(function(tx){
+          $("mint-tx").innerHTML = 'Transaction: <a href="https://bscscan.com/tx/' + tx.hash + '" target="_blank" rel="noopener">' + tx.hash.slice(0,18) + '… ↗ BscScan</a>';
+          setStatus("Mint sent — waiting for confirmation…");
+          return tx.wait();
+        }).then(function(){
+          setStatus("Mint confirmed ✓ Your Gold Founder Genesis Badge is in your wallet. Watch the official channels for the APLS Mining registration.", "ok");
+          btnMint.disabled = true; refreshLive(); refreshEligibility();
+        }).catch(function(e){ setStatus("Mint failed: " + (e.shortMessage || e.message || e), "err"); });
+      });
+      $("btn-copy-ref").addEventListener("click", function(){
+        var v = $("ref-link").value;
+        if (!v) { setStatus("Connect a wallet first — your referral link uses your wallet address."); return; }
+        if (navigator.clipboard) navigator.clipboard.writeText(v).then(function(){ setStatus("Referral link copied ✓", "ok"); });
+        else { $("ref-link").select(); document.execCommand("copy"); setStatus("Referral link copied ✓", "ok"); }
+      });
+    })();
+    </script>
+  </body>
+</html>
