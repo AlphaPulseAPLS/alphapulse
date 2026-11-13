@@ -47,6 +47,7 @@
       .check { list-style:none; padding:0; margin:10px 0; }
       .check li { padding:4px 0; } .check .ok { color:var(--live); font-weight:700; } .check .no { color:#ff7a7a; font-weight:700; }
       a { color:var(--accent); }
+      a.wclink { font-weight:700; white-space:nowrap; cursor:pointer; }
       .small { font-size:.9rem; color:var(--ink-dim); }
       .refbox { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
       .refbox input { flex:1 1 320px; padding:11px 12px; border-radius:10px; border:1px solid var(--panel-edge);
@@ -83,16 +84,16 @@
         <h2>Mint your badge</h2>
         <div class="mint-notice" id="mint-nowallet" hidden>⚠ No wallet could be reached from this page.
           Open this link from the address bar of your wallet's own DApp browser instead: Binance Web3 Wallet,
-          Bitget Wallet, MetaMask, Trust Wallet, or Mises, with BNB Chain selected — or tap
-          <b>Connect with WalletConnect</b> below.</div>
+          Bitget Wallet, MetaMask, Trust Wallet, or Mises, with BNB Chain selected — or use the
+          <b>WalletConnect</b> link below.</div>
         <ul class="check">
           <li><span id="chk-agent">•</span> Wallet holds a Binance Agent ID</li>
           <li><span id="chk-minted">•</span> This wallet has not minted yet</li>
         </ul>
         <div id="ref-note" class="small"></div>
         <button class="mbtn" id="btn-connect" type="button">Connect Wallet</button>
-        <button class="mbtn secondary" id="btn-connect-wc" type="button">Connect with WalletConnect</button>
         <button class="mbtn" id="btn-mint" type="button" disabled>Mint FREE Badge</button>
+        <div class="small">Open this page inside your Binance or Bitget wallet browser and tap <b>Connect Wallet</b> — the wallet holding your Agent ID connects directly, in one tap. No wallet browser? <a href="#" class="wclink" id="btn-connect-wc">Connect with WalletConnect</a> instead.</div>
         <div class="small" id="wallet-addr"></div>
         <div class="small" id="wallet-bal"></div>
         <div class="mint-status" id="mint-status">Connect your wallet to check eligibility.</div>
@@ -318,6 +319,16 @@
         btnConnect.textContent = "Connected ✓";
         refreshLive(); refreshEligibility(); refreshMining();
       }
+      /* ---- silent reconnect: if the wallet in this browser already
+              authorized this site, connect with zero taps ---- */
+      if (deployed && typeof ethers !== "undefined") {
+        waitForProvider(2500).then(function(p){
+          if (!p || account) return;
+          preq("eth_accounts").then(function(accs){
+            if (accs && accs[0] && !account) { account = accs[0]; markConnected(); }
+          }).catch(function(){});
+        });
+      }
       var connecting = false;
       btnConnect.addEventListener("click", function(){
         if (connecting) return;
@@ -340,7 +351,8 @@
           .catch(function(e){ if (e && e.message === "__timeout__") fail("The wallet did not answer within 20 seconds. Unlock your wallet, then tap Connect Wallet again."); else fail("Connection failed: " + ((e && (e.shortMessage || e.message)) || e)); });
         });
       });
-      btnWc.addEventListener("click", function(){
+      btnWc.addEventListener("click", function(e){
+        if (e && e.preventDefault) e.preventDefault();
         if (connecting) return;
         if (typeof ethers === "undefined") { setStatus("The wallet library failed to load — check your connection and reload this page.", "err"); return; }
         var EthereumProvider = window.EthereumProvider || (window["@walletconnect/ethereum-provider"] && window["@walletconnect/ethereum-provider"].EthereumProvider);
