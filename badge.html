@@ -84,8 +84,8 @@
         <h2>Mint your badge</h2>
         <div class="mint-notice" id="mint-nowallet" hidden>⚠ No wallet could be reached from this page.
           Open this link from the address bar of your wallet's own DApp browser instead: Binance Web3 Wallet,
-          Bitget Wallet, MetaMask, Trust Wallet, or Mises, with BNB Chain selected — or use the
-          <b>WalletConnect</b> link below.</div>
+          Bitget Wallet, MetaMask, Trust Wallet, or Mises, with BNB Chain selected — or tap
+          <b>Connect Agent ID Wallet</b> below.</div>
         <ul class="check">
           <li><span id="chk-agent">•</span> Wallet holds a Binance Agent ID</li>
           <li><span id="chk-minted">•</span> This wallet has not minted yet</li>
@@ -93,7 +93,9 @@
         <div id="ref-note" class="small"></div>
         <button class="mbtn" id="btn-connect" type="button">Connect Wallet</button>
         <button class="mbtn" id="btn-mint" type="button" disabled>Mint FREE Badge</button>
-        <div class="small">Open this page inside your Binance or Bitget wallet browser and tap <b>Connect Wallet</b> — the wallet holding your Agent ID connects directly, in one tap. No wallet browser? <a href="#" class="wclink" id="btn-connect-wc">Connect with WalletConnect</a> instead.</div>
+        <div class="small">Open this page inside your Binance or Bitget wallet browser and tap <b>Connect Wallet</b> — the wallet holding your Agent ID connects directly, in one tap.</div>
+        <button class="mbtn secondary" id="btn-connect-wc" type="button">Connect Agent ID Wallet</button>
+        <div class="small">For Binance <b>Agentic Wallet</b> holders: this opens WalletConnect — scan its QR code from your Agentic Wallet page (scan icon, top right) so the wallet that holds your Agent ID connects.</div>
         <div class="small" id="wallet-addr"></div>
         <div class="small" id="wallet-bal"></div>
         <div class="mint-status" id="mint-status">Connect your wallet to check eligibility.</div>
@@ -176,7 +178,11 @@
       var referrer = resolveRef();
       if (referrer) $("ref-note").textContent = "Referral linked ✓ — your mint will credit your referrer on-chain.";
 
-      function readProvider(){ return new ethers.JsonRpcProvider(RPC); }
+      function readProvider(){
+        var urls = [RPC, "https://bsc-dataseed1.binance.org", "https://bsc-dataseed2.binance.org", "https://bsc.publicnode.com"];
+        var ps = urls.map(function(u){ return new ethers.JsonRpcProvider(u, 56, { staticNetwork: true }); });
+        return new ethers.FallbackProvider(ps, 56, { quorum: 1 });
+      }
       function refreshLive(){
         if (!deployed || typeof ethers === "undefined") return;
         try {
@@ -310,7 +316,7 @@
           $("ref-link").value = link;
           if (already) { btnMint.disabled = true; setStatus("This wallet already minted its Genesis Badge ✓", "ok"); }
           else if (!open) { btnMint.disabled = true; setStatus("Minting is not open yet — it opens with the launch announcement."); }
-          else if (!hasAgent) { btnMint.disabled = true; setStatus("This wallet holds no Binance Agent ID, so it cannot mint the Genesis Badge.", "err"); }
+          else if (!hasAgent) { btnMint.disabled = true; setStatus("This wallet holds no Binance Agent ID, so it cannot mint the Genesis Badge. If your Agent ID lives in your Binance Agentic Wallet, tap Connect Agent ID Wallet and scan the QR from the Agentic Wallet page.", "err"); }
           else { btnMint.disabled = false; setStatus("Ready — tap Mint FREE Badge and confirm in your wallet."); }
         }).catch(function(e){ setStatus("Could not read wallet state: " + (e.shortMessage || e.message || e), "err"); });
       }
@@ -337,7 +343,7 @@
         setStatus("Connecting — approve the connection in your wallet if it asks…");
         function fail(msg){ connecting=false; btnConnect.disabled=false; btnConnect.textContent="Connect Wallet"; $("mint-nowallet").hidden = false; setStatus(msg, "err"); }
         waitForProvider(1500).then(function(p){
-          if (!p) { fail("No wallet found in this browser. Open this page from the address bar of your wallet's own DApp browser (Bitget Wallet, MetaMask, Trust Wallet, or Mises) — or use WalletConnect below."); return; }
+          if (!p) { fail("No wallet found in this browser. Open this page from the address bar of your wallet's own DApp browser (Bitget Wallet, MetaMask, Trust Wallet, or Mises) — or tap Connect Agent ID Wallet below."); return; }
           withTimeout(preq("eth_requestAccounts"), 20000).then(function(accs){
             account = accs && accs[0];
             if (!account) throw new Error("The wallet returned no account.");
@@ -358,7 +364,7 @@
         var EthereumProvider = window.EthereumProvider || (window["@walletconnect/ethereum-provider"] && window["@walletconnect/ethereum-provider"].EthereumProvider);
         if (!EthereumProvider) { setStatus("WalletConnect failed to load — check your connection and reload this page, or use Connect Wallet inside your wallet's DApp browser.", "err"); return; }
         connecting = true; btnWc.disabled = true; btnWc.textContent = "Opening WalletConnect…";
-        setStatus("Pick your wallet in the WalletConnect list and approve the connection inside your wallet app…");
+        setStatus("WalletConnect is open — scan the QR code from your Agentic Wallet page in the Binance app (scan icon, top right), then approve the connection there.");
         EthereumProvider.init({ projectId: WC_PROJECT_ID, chains: [56], showQrModal: true,
           metadata: { name: "AlphaPulse Genesis Badge", description: "Free Genesis Badge mint for AlphaPulse holders on BNB Chain", url: "https://alphapulseapls.github.io/alphapulse/", icons: ["https://alphapulseapls.github.io/alphapulse/apls-icon.png"] },
           qrModalOptions: { themeMode: "dark" }
@@ -370,7 +376,7 @@
             connecting = false; btnWc.disabled = false; btnWc.textContent = "WalletConnect ✓";
             markConnected();
           });
-        }).catch(function(e){ connecting=false; btnWc.disabled=false; btnWc.textContent="Connect with WalletConnect"; setStatus("WalletConnect failed: " + ((e && (e.shortMessage || e.message)) || e), "err"); });
+        }).catch(function(e){ connecting=false; btnWc.disabled=false; btnWc.textContent="Connect Agent ID Wallet"; setStatus("WalletConnect failed: " + ((e && (e.shortMessage || e.message)) || e), "err"); });
       });
       btnMint.addEventListener("click", function(){
         if (!account || !deployed) return;
